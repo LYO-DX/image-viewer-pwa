@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Viewer PWA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div id="viewer">
+        <img id="mainImage" src="images/sample1.jpg" alt="画像">
+        <div id="controls">
+            <button id="rotate">回転</button>
+            <button id="reset">初期配置</button>
+            <button id="fullscreen">全画面</button>
+            <button id="initialImage">初期画像</button>
+            <button id="userImage">自分画像</button>
+            <label for="fileInput">画像選択</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
+
