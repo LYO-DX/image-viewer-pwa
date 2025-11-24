@@ -1,10 +1,14 @@
 let initialImageSrc = "images/sample1.jpg";
-let userImageSrc = null; // ユーザー画像は未読み込み
+let userImageSrc = null;
 let rotation = 0;
 let scale = 1;
+let translateX = 0;
+let translateY = 0;
 
 const mainImage = document.getElementById("mainImage");
 const fileInput = document.getElementById("fileInput");
+const exitBtn = document.getElementById("exitFullscreen");
+let exitTimeout = null;
 
 // 回転
 document.getElementById("rotate").addEventListener("click", () => {
@@ -16,34 +20,27 @@ document.getElementById("rotate").addEventListener("click", () => {
 document.getElementById("reset").addEventListener("click", () => {
     rotation = 0;
     scale = 1;
+    translateX = 0;
+    translateY = 0;
     updateTransform();
 });
 
 // 全画面
-document.getElementById("fullscreen").addEventListener("click", () => {
+document.getElementById("fullscreen").addEventListener("click", async () => {
     if (mainImage.requestFullscreen) {
-        mainImage.requestFullscreen();
+        await mainImage.requestFullscreen();
+        showExitButton();
     }
 });
 
 // 初期画像切替
 document.getElementById("initialImage").addEventListener("click", () => {
     mainImage.src = initialImageSrc;
-    rotation = 0;
-    scale = 1;
-    updateTransform();
 });
 
 // 自分画像切替
 document.getElementById("userImage").addEventListener("click", () => {
-    if (userImageSrc) {
-        mainImage.src = userImageSrc;
-    } else {
-        mainImage.src = initialImageSrc;
-    }
-    rotation = 0;
-    scale = 1;
-    updateTransform();
+    mainImage.src = userImageSrc ? userImageSrc : initialImageSrc;
 });
 
 // 画像選択
@@ -53,32 +50,54 @@ fileInput.addEventListener("change", (e) => {
         const url = URL.createObjectURL(file);
         userImageSrc = url;
         mainImage.src = url;
-        rotation = 0;
-        scale = 1;
-        updateTransform();
         cacheImage(file);
     }
 });
 
-// 画像キャッシュ（Service Workerを使用）
+// キャッシュ
 async function cacheImage(file) {
     const cache = await caches.open("image-viewer-cache-v1");
     const response = await fetch(URL.createObjectURL(file));
     await cache.put("/current-user-image", response);
 }
 
-function updateTransform() {
-    mainImage.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+// 全画面解除ボタン
+function showExitButton() {
+    exitBtn.style.opacity = 1;
+    if (exitTimeout) clearTimeout(exitTimeout);
+    exitTimeout = setTimeout(() => {
+        exitBtn.style.opacity = 0;
+    }, 2000);
 }
 
-// ピンチズーム対応（簡易）
+exitBtn.addEventListener("click", () => {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
+    exitBtn.style.opacity = 0;
+    if (exitTimeout) clearTimeout(exitTimeout);
+});
+
+// 画面タップで表示
+mainImage.addEventListener("click", () => {
+    if (document.fullscreenElement) showExitButton();
+});
+
+// ピンチズーム + 移動保持
 let startDist = 0;
+let startX = 0, startY = 0, origX = 0, origY = 0;
+
 mainImage.addEventListener("touchstart", (e) => {
     if (e.touches.length === 2) {
         startDist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
         );
+    } else if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        origX = translateX;
+        origY = translateY;
     }
 });
 
@@ -92,5 +111,9 @@ mainImage.addEventListener("touchmove", (e) => {
         scale = Math.min(Math.max(scale, 0.5), 3);
         startDist = dist;
         updateTransform();
-    }
-});
+    } else if (e.touches.length === 1) {
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        translateX = origX + dx;
+        translateY = origY + dy;
+        updateTransform();

@@ -5,7 +5,7 @@ html, body {
     height: 100%;
     overflow: hidden;
     touch-action: none;
-    background-color: #ffffff;
+    background-color: #fff; /* 背景を白に */
     font-family: sans-serif;
 }
 
@@ -16,6 +16,7 @@ html, body {
     justify-content: center;
     align-items: center;
     position: relative;
+    background-color: #fff;
 }
 
 #viewer img {
@@ -46,8 +47,8 @@ html, body {
     padding: 6px 10px;
     font-size: 16px;
     border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #cccccc;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #111; /* 文字色黒系 */
     border: none;
     cursor: pointer;
     text-align: center;
@@ -56,11 +57,32 @@ html, body {
 
 #controls button:hover,
 #controls label:hover {
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 #controls input[type=file] {
     display: none;
+}
+
+#exitFullscreen {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 20;
+    padding: 6px 12px;
+    font-size: 16px;
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.1);
+    color: #111;
+    border: none;
+    cursor: pointer;
+}
+
+#exitFullscreen:hover {
+    background-color: rgba(0,0,0,0.2);
 }
 
 @media (hover: none) {
