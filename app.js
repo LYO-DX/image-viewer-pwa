@@ -1,84 +1,73 @@
 /* app.js
-   Chrome（Android）向けに最適化済み
-   - 編集モード: ピンチズーム / ドラッグ / 回転 / 初期配置 / 画像読み込み
-   - 固定モード(全画面): 操作無効、1タップで下部に解除ボタンを2秒表示、押すと解除
-   - 読み込んだユーザー画像は service worker のキャッシュに "/current-user-image" として保存
+   Chrome(Android) 最適化版
+   - ピンチズーム / ドラッグ / 回転 / 初期画像 / 自分画像
+   - ユーザー画像は URL.createObjectURL で保持
+   - 全画面時は編集を無効化（固定）
+   - 全画面中のタップで下部に解除ボタンを2秒表示、押下で解除
 */
 
-/* 要素 */
 const img = document.getElementById('image');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
-const rotateBtn = document.getElementById('rotateBtn');
-const resetBtn = document.getElementById('resetBtn');
 const initialBtn = document.getElementById('initialBtn');
 const userBtn = document.getElementById('userBtn');
+const rotateBtn = document.getElementById('rotateBtn');
+const resetBtn = document.getElementById('resetBtn');
 const fileInput = document.getElementById('fileInput');
 const exitBtn = document.getElementById('exitFullscreenBtn');
 
 const initialImagePath = 'images/sample1.jpg';
 
-/* 状態 */
-let userImageURL = null; // blob URL (optional), but we will use cache path '/current-user-image'
+// transform state
 let scale = 1;
-let rotation = 0; // degrees
-let posX = 0; // px
-let posY = 0; // px
+let rotationDeg = 0;
+let posX = 0;
+let posY = 0;
 
-/* touch state */
+// touch state
 let startDist = 0;
 let startScale = 1;
 let startTouch = null;
-let startPos = { x: 0, y: 0 };
+let startPos = {x:0,y:0};
 
-/* bounds for scale */
+// scale bounds
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 4.0;
 
-/* exit button timer */
+// exit button timer
 let exitTimer = null;
 
-/* Apply transform consistently */
+/* apply transform */
 function applyTransform() {
-  img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
+  img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotationDeg}deg)`;
 }
 
-/* ----------------------------
-   Image switching & caching
-   ---------------------------- */
+/* load initial image on start */
+img.src = initialImagePath;
 
-/* Set initial or cached image on load */
-function setInitialImage() {
-  img.src = initialImagePath;
-}
+/* ------------- user image handling ------------- */
+let userImageURL = null; // object URL
 
-/* When user selects file, store it in cache as '/current-user-image' and set src to that path */
-fileInput.addEventListener('change', async (e) => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-  try {
-    // Put file into Cache Storage at key '/current-user-image'
-    const cache = await caches.open('image-viewer-cache-v1');
-    const response = new Response(file, { headers: { 'Content-Type': file.type || 'image/*' } });
-    await cache.put('/current-user-image', response);
-    // Use the cache URL as the src - service worker will serve it
-    userImageURL = '/current-user-image';
-    img.src = userImageURL;
-  } catch (err) {
-    // Fallback to object URL if cache put fails
-    if (userImageURL) {
-      try { URL.revokeObjectURL(userImageURL); } catch {}
-    }
-    userImageURL = URL.createObjectURL(file);
-    img.src = userImageURL;
+fileInput.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+
+  // 古い object URL があれば解放
+  if (userImageURL) {
+    URL.revokeObjectURL(userImageURL);
+    userImageURL = null;
   }
+
+  userImageURL = URL.createObjectURL(f);
+  img.src = userImageURL;
 });
 
-/* Buttons to switch images */
+// switch to initial image
 initialBtn.addEventListener('click', () => {
   img.src = initialImagePath;
 });
 
-userBtn.addEventListener('click', async () => {
+// switch to user image
+userBtn.addEventListener('click', () => {
   if (userImageURL) {
     img.src = userImageURL;
   } else {
@@ -86,36 +75,29 @@ userBtn.addEventListener('click', async () => {
   }
 });
 
-/* ----------------------------
-   rotation and reset
-   ---------------------------- */
+/* ------------- rotation / reset ------------- */
 rotateBtn.addEventListener('click', () => {
-  rotation = (rotation + 90) % 360;
+  rotationDeg = (rotationDeg + 90) % 360;
   applyTransform();
 });
 
 resetBtn.addEventListener('click', () => {
   scale = 1;
-  rotation = 0;
+  rotationDeg = 0;
   posX = 0;
   posY = 0;
   applyTransform();
 });
 
-/* ----------------------------
-   Touch interactions (editing mode)
-   ---------------------------- */
+/* ------------- touch handlers (editing mode only) ------------- */
 function getDistance(touches) {
   const dx = touches[0].clientX - touches[1].clientX;
   const dy = touches[0].clientY - touches[1].clientY;
   return Math.hypot(dx, dy);
 }
 
-/* touchstart */
 img.addEventListener('touchstart', (e) => {
-  // If in full screen (fixed mode) => ignore editing gestures
-  if (document.fullscreenElement) return;
-
+  if (document.fullscreenElement) return; // fixed mode
   if (e.touches.length === 2) {
     startDist = getDistance(e.touches);
     startScale = scale;
@@ -125,10 +107,8 @@ img.addEventListener('touchstart', (e) => {
   }
 }, { passive: true });
 
-/* touchmove */
 img.addEventListener('touchmove', (e) => {
-  if (document.fullscreenElement) return;
-
+  if (document.fullscreenElement) return; // fixed mode
   if (e.touches.length === 2) {
     const dist = getDistance(e.touches);
     const newScale = startScale * (dist / startDist);
@@ -143,21 +123,17 @@ img.addEventListener('touchmove', (e) => {
   }
 }, { passive: false });
 
-/* touchend: reset startTouch when fingers lifted */
 img.addEventListener('touchend', (e) => {
   if (e.touches.length === 0) {
     startTouch = null;
   } else if (e.touches.length === 1) {
-    // continue panning with remaining finger
     startTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     startPos = { x: posX, y: posY };
   }
 });
 
 /* Basic mouse support for desktop testing */
-let dragging = false;
-let mouseStart = { x: 0, y: 0 }, mouseStartPos = { x: 0, y: 0 };
-
+let dragging = false, mouseStart = {x:0,y:0}, mouseStartPos = {x:0,y:0};
 img.addEventListener('mousedown', (e) => {
   if (document.fullscreenElement) return;
   dragging = true;
@@ -173,50 +149,30 @@ document.addEventListener('mousemove', (e) => {
 });
 document.addEventListener('mouseup', () => { dragging = false; });
 
-/* ----------------------------
-   Fullscreen handling (Chrome-optimized)
-   ---------------------------- */
-
+/* ------------- fullscreen handling (Chrome optimized) ------------- */
 fullscreenBtn.addEventListener('click', async () => {
   try {
-    // requestFullscreen on documentElement to get true fullscreen
     await document.documentElement.requestFullscreen();
-    // mark body as fullscreen-mode to hide controls via CSS
     document.body.classList.add('fullscreen-mode');
-    // Reapply transform after entering fullscreen to ensure consistency
     requestAnimationFrame(() => applyTransform());
-    // show exit button briefly once
     showExitBtnTemporarily();
-  } catch (err) {
-    // ignore request errors
-  }
+  } catch (err) {}
 });
 
-/* When fullscreen state changes */
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
-    // exited fullscreen
     document.body.classList.remove('fullscreen-mode');
-    // hide exit button if still shown
     hideExitBtnImmediate();
   } else {
-    // entered fullscreen
     document.body.classList.add('fullscreen-mode');
-    // reapply transform
     requestAnimationFrame(() => applyTransform());
   }
 });
 
-/* ----------------------------
-   Exit button behavior (全画面解除)
-   ---------------------------- */
+/* ------------- exit button logic ------------- */
 function showExitBtnTemporarily() {
   exitBtn.classList.add('show');
-  // clear any existing timer
-  if (exitTimer) {
-    clearTimeout(exitTimer);
-    exitTimer = null;
-  }
+  if (exitTimer) { clearTimeout(exitTimer); exitTimer = null; }
   exitTimer = setTimeout(() => {
     exitBtn.classList.remove('show');
     exitTimer = null;
@@ -228,43 +184,27 @@ function hideExitBtnImmediate() {
   exitBtn.classList.remove('show');
 }
 
-/* Show exit button on any touch while in fullscreen */
 document.addEventListener('touchstart', (e) => {
   if (!document.fullscreenElement) return;
-  // show button temporarily
   showExitBtnTemporarily();
 }, { passive: true });
 
 exitBtn.addEventListener('click', async () => {
   if (document.fullscreenElement) {
-    try {
-      await document.exitFullscreen();
-    } catch (err) {}
+    try { await document.exitFullscreen(); } catch {}
   }
   hideExitBtnImmediate();
 });
 
-/* apply transform after image load (handles source changes) */
+/* ------------- image load & resize safety ------------- */
 img.addEventListener('load', () => {
-  // ensure transform reapplied after layout
   requestAnimationFrame(() => applyTransform());
 });
-
-/* Reapply transform on resize as a precaution */
 window.addEventListener('resize', () => {
   requestAnimationFrame(() => applyTransform());
 });
 
-/* ----------------------------
-   Service Worker registration
-   ---------------------------- */
+/* ------------- service worker registration ------------- */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(()=>{});
 }
-
-/* initialize */
-(function init() {
-  // ensure initial image
-  if (!img.src) img.src = initialImagePath;
-  applyTransform();
-})();

@@ -1,47 +1,47 @@
-/* 基本 */
-html,body {
+/* basics */
+html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
+  width:100%;
+  height:100%;
   overflow: hidden;
-  background: #ffffff; /* 背景は白 */
+  background: #ffffff;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
-  touch-action: none; /* 基本はタッチのデフォルト動作を無効化（編集時はJSで制御） */
+  touch-action: none;
 }
 
-/* ビューア領域 */
+/* viewer */
 #viewer {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #fff;
-  position: relative;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  background:#fff;
 }
 
 #viewer img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width:100%;
+  max-height:100%;
   transform-origin: center center;
   will-change: transform;
   touch-action: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  display: block;
+  user-select:none;
+  -webkit-user-drag:none;
+  display:block;
 }
 
-/* 編集モードのコントロール（通常画面で表示） */
+/* controls (editing mode) */
 #controls {
   position: absolute;
   top: 10px;
   right: 10px;
-  display: flex;
+  display:flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 30;
+  z-index: 100;
 }
 
 #controls button,
@@ -53,21 +53,18 @@ html,body {
   font-size: 15px;
   border-radius: 8px;
   cursor: pointer;
-  outline: none;
 }
 
-/* ファイル入力は隠す（ラベルで操作） */
-#fileInput {
-  display: none;
-}
+/* hide native file input */
+#fileInput { display: none; }
 
-/* 全画面解除ボタン（下中央） */
+/* exit fullscreen button */
 #exitFullscreenBtn {
   position: fixed;
   bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 200;
   background: rgba(0,0,0,0.12);
   color: #111;
   border: none;
@@ -75,36 +72,24 @@ html,body {
   border-radius: 10px;
   font-size: 15px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.18s ease;
   pointer-events: auto;
 }
 
-/* visible state */
 #exitFullscreenBtn.show {
   opacity: 1;
 }
 
-/* 非表示にする（全画面時は編集コントロールを隠す） */
+/* hide editing controls in fullscreen mode (class toggled by JS) */
 body.fullscreen-mode #controls {
   display: none;
 }
 
-/* ホバー/タップで少し濃く */
-#controls button:hover,
-#controls .fileLabel:hover {
-  background: rgba(0,0,0,0.12);
-}
-
-/* モバイル調整 */
+/* small screens tweak */
 @media (hover: none) {
-  #controls {
-    gap: 6px;
-    top: 8px;
-    right: 8px;
-  }
   #controls button,
   #controls .fileLabel {
-    padding: 9px 14px;
+    padding: 10px 14px;
     font-size: 16px;
   }
   #exitFullscreenBtn {

@@ -6,25 +6,26 @@
   <title>Image Viewer PWA</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#ffffff">
 </head>
 <body>
   <div id="viewer">
     <img id="image" src="images/sample1.jpg" alt="表示画像">
   </div>
 
-  <!-- 編集モードの操作ボタン -->
+  <!-- 編集モードのコントロール -->
   <div id="controls">
     <button id="fullscreenBtn">全画面</button>
-    <button id="rotateBtn">回転</button>
-    <button id="resetBtn">初期配置</button>
     <button id="initialBtn">初期画像</button>
     <button id="userBtn">自分画像</button>
+    <button id="rotateBtn">回転</button>
+    <button id="resetBtn">初期配置</button>
 
-    <label for="fileInput" class="fileLabel">画像選択</label>
+    <label for="fileInput" class="fileLabel">開く</label>
     <input id="fileInput" type="file" accept="image/*">
   </div>
 
-  <!-- 全画面解除ボタン（全画面中のみ、タップで2秒表示） -->
+  <!-- 全画面解除ボタン（全画面時に1タップで下部に2秒表示） -->
   <button id="exitFullscreenBtn" aria-hidden="true">全画面解除</button>
 
   <script src="app.js"></script>
