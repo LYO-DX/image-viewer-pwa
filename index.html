@@ -1,26 +1,32 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Viewer PWA</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Image Viewer PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="viewer">
-        <img id="mainImage" src="images/sample1.jpg" alt="画像">
-        <div id="controls">
-            <button id="fullscreen">全画面</button> <!-- 一番上 -->
-            <button id="rotate">回転</button>
-            <button id="reset">初期配置</button>
-            <button id="initialImage">初期画像</button>
-            <button id="userImage">自分画像</button>
-            <label for="fileInput">画像選択</label>
-            <input type="file" id="fileInput" accept="image/*">
-        </div>
-        <button id="exitFullscreen">全画面解除</button>
-    </div>
-    <script src="app.js"></script>
+  <div id="viewer">
+    <img id="image" src="images/sample1.jpg" alt="表示画像">
+  </div>
+
+  <!-- 編集モードの操作ボタン -->
+  <div id="controls">
+    <button id="fullscreenBtn">全画面</button>
+    <button id="rotateBtn">回転</button>
+    <button id="resetBtn">初期配置</button>
+    <button id="initialBtn">初期画像</button>
+    <button id="userBtn">自分画像</button>
+
+    <label for="fileInput" class="fileLabel">画像選択</label>
+    <input id="fileInput" type="file" accept="image/*">
+  </div>
+
+  <!-- 全画面解除ボタン（全画面中のみ、タップで2秒表示） -->
+  <button id="exitFullscreenBtn" aria-hidden="true">全画面解除</button>
+
+  <script src="app.js"></script>
 </body>
 </html>

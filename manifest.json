@@ -1,6 +1,6 @@
 {
   "name": "Image Viewer PWA",
-  "short_name": "ImageViewer",
+  "short_name": "Viewer",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,7 +9,7 @@
     {
       "src": "images/sample1.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
