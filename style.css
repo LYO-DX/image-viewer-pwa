@@ -65,8 +65,8 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 200;
-  background: rgba(0,0,0,0.04);
-  color: #CCCCCC;
+  background: rgba(240,240,0,0.1);
+  color: #EEEEEE;
   border: none;
   padding: 10px 16px;
   border-radius: 10px;
